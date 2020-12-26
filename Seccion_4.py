@@ -14,6 +14,12 @@ items = []
 
 
 class Item(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('price',
+                        type=float,
+                        required=True,
+                        help="This field cannot be left blank, fill it"
+                        )
     @jwt_required()
     def get(self, name):
         item = next(filter(lambda x: x['name'] == name, items),None)
@@ -24,13 +30,14 @@ class Item(Resource):
     def post(self,name):
         if next(filter(lambda x: x['name'] == name, items),None):
             return {'message': "The item '{}' already exists.".format(name)}, 400
-        request_data = request.get_json()
         #Si colocamos entre parentesis force=True ignora la cabecera, es peligroso
         #pero si colocamos silent = True, me devuelve un None si la cabecera es incorrecta
         #asi obtenemos el Json payload
         #Si el request no tiene un dato o un json format, va a dar error
         #En el postman tengo que tener bien el content-Type y el tipo de aplicacion
-        item = {'name': name, 'price': request_data['price']}
+        data = Item.parser.parse_args()
+        # request_data = request.get_json()
+        item = {'name': name, 'price': data['price']}
         items.append(item)
         return item, 201 #El 201 es el codigo http que indica creado
     #el 202 indica aceptado pero puede demorar mas en crear
@@ -40,14 +47,8 @@ class Item(Resource):
         items = list(filter(lambda x: x['name'] != name, items))
         return {'message': 'Item deleted'}
 
-    def put(self,name):
-        parser = reqparse.RequestParser()
-        parser.add_argument('price',
-                            type=float,
-                            required=True,
-                            help="This field cannot be left blank"
-                            )
-        data = parser.parse_args()
+    def put(self, name):
+        data = Item.parser.parse_args()
         # data = request.get_json()
         item = next(filter(lambda x: x['name'] == name, items), None)
         if item is None:
