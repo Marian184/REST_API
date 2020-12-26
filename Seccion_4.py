@@ -18,13 +18,14 @@ class Item(Resource):
     def post(self,name):
         if next(filter(lambda x: x['name'] == name, items),None):
             return {'message': "The item '{}' already exists.".format(name)}, 400
+
+
         request_data = request.get_json()
         #Si colocamos entre parentesis force=True ignora la cabecera, es peligroso
         #pero si colocamos silent = True, me devuelve un None si la cabecera es incorrecta
         #asi obtenemos el Json payload
         #Si el request no tiene un dato o un json format, va a dar error
         #En el postman tengo que tener bien el content-Type y el tipo de aplicacion
-
         item = {'name': name, 'price': request_data['price']}
         items.append(item)
         return item, 201 #El 201 es el codigo http que indica creado
